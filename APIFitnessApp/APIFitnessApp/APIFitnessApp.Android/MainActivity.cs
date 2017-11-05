@@ -15,7 +15,6 @@ using System.Threading.Tasks;
 using Android.Content.PM;
 using Android.Util;
 using System.Collections.Generic;
-using Android.Views;
 
 namespace APIFitnessApp.Droid
 { 
@@ -105,15 +104,15 @@ namespace APIFitnessApp.Droid
                 .AddApi(FitnessClass.SENSORS_API)
                 .AddScope(new Scope(Scopes.FitnessActivityReadWrite))
                 .AddConnectionCallbacks(
-                    // connection succeeded
-                    async connectionHint => {
+                     // connection succeeded
+                     async connectionHint => {
                         if (Log.IsLoggable(TAG, LogPriority.Info))
                         {
                             Log.Info(TAG, "Connected to the Google API client");
                         }
                         // Get step data from Google Play Services
                         await FindFitnessDataSensor();
-                        readSteps();
+                        //readSteps();
                     },
                     // connection suspended
                     cause => {
@@ -178,14 +177,15 @@ namespace APIFitnessApp.Droid
         async Task RegisterListenerLocation(DataSource dataSource, Android.Gms.Fitness.Data.DataType dataType)
         {
             //Generamos el listener que se encargara de actualizar el valor del dato que vamos a leer automaticamente
-            mListenerLocation = new OnDataPointListener();
+            //mListenerLocation = new OnDataPointListener();
+
             //Creamos la peticion de lectura para el dato solicitado y que sera actualizado cada 10 segundos
             var status = await FitnessClass.SensorsApi.AddAsync(mClient, new SensorRequest.Builder()
                 .SetDataSource(dataSource) // Optional but recommended for custom data sets.
                 .SetDataType(dataType) // Can't be omitted.
                 .SetSamplingRate(10, TimeUnit.Seconds)
                 .Build(),
-                mListenerLocation);
+                this);
             //Comprobamos si el listener se ha creado correctamente
             if (status.IsSuccess){
                 Log.Info(TAG, "Listener location registered!");
@@ -197,7 +197,7 @@ namespace APIFitnessApp.Droid
         async Task RegisterListenerStep(DataSource dataSource, Android.Gms.Fitness.Data.DataType dataType)
         {
             //Generamos el listener que se encargara de actualizar el valor del dato que vamos a leer automaticamente
-            mListenerStep = new OnDataPointListener();
+            //mListenerStep = new OnDataPointListener();
 
             //Creamos la peticion de lectura para el dato solicitado y que sera actualizado cada 10 segundos
             var status = await FitnessClass.SensorsApi.AddAsync(mClient, new SensorRequest.Builder()
@@ -205,7 +205,7 @@ namespace APIFitnessApp.Droid
                 .SetDataType(dataType) // Can't be omitted.
                 .SetSamplingRate(10, TimeUnit.Seconds)
                 .Build(),
-                mListenerStep);
+                this);
             //Comprobamos si el listener se ha creado correctamente
             if (status.IsSuccess){
                 Log.Info(TAG, "Listener step registered!");
@@ -213,23 +213,8 @@ namespace APIFitnessApp.Droid
                 Log.Info(TAG, "Listener step not registered.");
             }
         }
-
-        //Clase que utiliza el listener para actualizar el valor del dato
-        class OnDataPointListener : Java.Lang.Object, IOnDataPointListener
-        {
-            public void OnDataPoint(DataPoint dataPoint)
-            {
-                foreach (var field in dataPoint.DataType.Fields)
-                {
-                    Value val = dataPoint.GetValue(field);
-                    Log.Info(TAG, "Detected DataPoint field: " + field.Name);
-                    Log.Info(TAG, "Detected DataPoint value: " + val);
-                }
-            }
-        }
-
     }
-    
+    //Clase que utiliza el listener para actualizar el valor del dato
     public partial class MainActivity : IOnDataPointListener
     {
         public void OnDataPoint(DataPoint dataPoint)
@@ -239,6 +224,9 @@ namespace APIFitnessApp.Droid
                 Value val = dataPoint.GetValue(field);
                 Log.Info(TAG, "Detected DataPoint field: " + field.Name);
                 Log.Info(TAG, "Detected DataPoint value: " + val);
+                RunOnUiThread(() => 
+                    Toast.MakeText(Application.Context, "Field: " + field.Name + " Value: " + val, ToastLength.Short).Show()
+                );
             }
         }
     }
