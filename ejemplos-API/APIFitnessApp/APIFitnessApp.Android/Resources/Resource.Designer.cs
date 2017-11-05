@@ -3138,9 +3138,6 @@ namespace APIFitnessApp.Droid
 			// aapt resource value: 0x7f0b004d
 			public const int list_item = 2131427405;
 			
-			// aapt resource value: 0x7f0b0088
-			public const int location = 2131427464;
-			
 			// aapt resource value: 0x7f0b00bd
 			public const int masked = 2131427517;
 			
@@ -3261,6 +3258,12 @@ namespace APIFitnessApp.Droid
 			// aapt resource value: 0x7f0b0052
 			public const int parentPanel = 2131427410;
 			
+			// aapt resource value: 0x7f0b0088
+			public const int past24Value = 2131427464;
+			
+			// aapt resource value: 0x7f0b008a
+			public const int past48Value = 2131427466;
+			
 			// aapt resource value: 0x7f0b003d
 			public const int pin = 2131427389;
 			
@@ -3380,9 +3383,6 @@ namespace APIFitnessApp.Droid
 			
 			// aapt resource value: 0x7f0b00aa
 			public const int status_bar_latest_event_content = 2131427498;
-			
-			// aapt resource value: 0x7f0b008a
-			public const int step = 2131427466;
 			
 			// aapt resource value: 0x7f0b0063
 			public const int submenuarrow = 2131427427;

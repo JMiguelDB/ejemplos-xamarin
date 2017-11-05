@@ -1,6 +1,8 @@
 ﻿using System;
 using Android.App;
 using Android.Content;
+using Android.Runtime;
+using Android.Views;
 using Android.Widget;
 using Android.OS;
 using Android.Support.V7.App;
@@ -11,11 +13,11 @@ using Android.Gms.Fitness;
 using Android.Gms.Fitness.Data;
 using Android.Gms.Fitness.Result;
 using Java.Util.Concurrent;
+using Android.Graphics;
 using System.Threading.Tasks;
 using Android.Content.PM;
 using Android.Util;
 using System.Collections.Generic;
-using Android.Views;
 
 namespace APIFitnessApp.Droid
 { 
@@ -26,11 +28,7 @@ namespace APIFitnessApp.Droid
         const string AUTH_PENDING = "auth_state_pending";
         private bool authInProgress = false;
         private GoogleApiClient mClient;
-        IOnDataPointListener mListenerLocation = null;
-        IOnDataPointListener mListenerStep = null;
         public const string TAG = "APIFitnessApp";
-        private TextView step;
-        private TextView location;
 
         /* 
          * En este metodo se crea la conexion a la API fitness
@@ -40,8 +38,6 @@ namespace APIFitnessApp.Droid
         {
             base.OnCreate(savedInstanceState);
             SetContentView(Resource.Layout.Main);
-            step = (TextView)FindViewById(Resource.Id.step);
-            location = (TextView)FindViewById(Resource.Id.location);
 
             if (savedInstanceState != null){
                 authInProgress = savedInstanceState.GetBoolean(AUTH_PENDING);
@@ -102,17 +98,15 @@ namespace APIFitnessApp.Droid
             // Create and connect the Google API client
             mClient = new GoogleApiClient.Builder(this)
                 .AddApi(FitnessClass.HISTORY_API)
-                .AddApi(FitnessClass.SENSORS_API)
-                .AddScope(new Scope(Scopes.FitnessActivityReadWrite))
+                .AddScope(new Scope(Scopes.FitnessLocationRead))
                 .AddConnectionCallbacks(
                     // connection succeeded
-                    async connectionHint => {
+                    connectionHint => {
                         if (Log.IsLoggable(TAG, LogPriority.Info))
                         {
                             Log.Info(TAG, "Connected to the Google API client");
                         }
                         // Get step data from Google Play Services
-                        await FindFitnessDataSensor();
                         readSteps();
                     },
                     // connection suspended
@@ -152,95 +146,6 @@ namespace APIFitnessApp.Droid
                 )
                 .Build();
         }
-
-        async Task FindFitnessDataSensor()
-        {
-            //Creamos la peticion de los datos que queremos leer
-            var dataSourcesResult = await FitnessClass.SensorsApi.FindDataSourcesAsync(mClient, new DataSourcesRequest.Builder()
-                .SetDataTypes(Android.Gms.Fitness.Data.DataType.TypeLocationSample, Android.Gms.Fitness.Data.DataType.TypeStepCountCumulative)
-                .SetDataSourceTypes(DataSource.TypeRaw)
-                .Build());
-            Log.Info(TAG, "Result: " + dataSourcesResult.Status);
-            foreach (DataSource dataSource in dataSourcesResult.DataSources){
-                Log.Info(TAG, "Data source found: " + dataSource);
-                Log.Info(TAG, "Data Source type: " + dataSource.DataType.Name);
-                //Let's register a listener to receive Activity data!
-                if (dataSource.DataType.Name == Android.Gms.Fitness.Data.DataType.TypeLocationSample.Name && mListenerLocation == null){
-                    Log.Info(TAG, "Registering Location listener...");
-                    await RegisterListenerLocation(dataSource, Android.Gms.Fitness.Data.DataType.TypeLocationSample);
-                }else if (dataSource.DataType.Name == Android.Gms.Fitness.Data.DataType.TypeStepCountCumulative.Name && mListenerStep == null){
-                    Log.Info(TAG, "Registering Step listener...");
-                    await RegisterListenerLocation(dataSource, Android.Gms.Fitness.Data.DataType.TypeStepCountCumulative);
-                }
-            }
-        }
-
-        async Task RegisterListenerLocation(DataSource dataSource, Android.Gms.Fitness.Data.DataType dataType)
-        {
-            //Generamos el listener que se encargara de actualizar el valor del dato que vamos a leer automaticamente
-            mListenerLocation = new OnDataPointListener();
-            //Creamos la peticion de lectura para el dato solicitado y que sera actualizado cada 10 segundos
-            var status = await FitnessClass.SensorsApi.AddAsync(mClient, new SensorRequest.Builder()
-                .SetDataSource(dataSource) // Optional but recommended for custom data sets.
-                .SetDataType(dataType) // Can't be omitted.
-                .SetSamplingRate(10, TimeUnit.Seconds)
-                .Build(),
-                mListenerLocation);
-            //Comprobamos si el listener se ha creado correctamente
-            if (status.IsSuccess){
-                Log.Info(TAG, "Listener location registered!");
-            }else{
-                Log.Info(TAG, "Listener location not registered.");
-            }
-        }
-
-        async Task RegisterListenerStep(DataSource dataSource, Android.Gms.Fitness.Data.DataType dataType)
-        {
-            //Generamos el listener que se encargara de actualizar el valor del dato que vamos a leer automaticamente
-            mListenerStep = new OnDataPointListener();
-
-            //Creamos la peticion de lectura para el dato solicitado y que sera actualizado cada 10 segundos
-            var status = await FitnessClass.SensorsApi.AddAsync(mClient, new SensorRequest.Builder()
-                .SetDataSource(dataSource) // Optional but recommended for custom data sets.
-                .SetDataType(dataType) // Can't be omitted.
-                .SetSamplingRate(10, TimeUnit.Seconds)
-                .Build(),
-                mListenerStep);
-            //Comprobamos si el listener se ha creado correctamente
-            if (status.IsSuccess){
-                Log.Info(TAG, "Listener step registered!");
-            }else{
-                Log.Info(TAG, "Listener step not registered.");
-            }
-        }
-
-        //Clase que utiliza el listener para actualizar el valor del dato
-        class OnDataPointListener : Java.Lang.Object, IOnDataPointListener
-        {
-            public void OnDataPoint(DataPoint dataPoint)
-            {
-                foreach (var field in dataPoint.DataType.Fields)
-                {
-                    Value val = dataPoint.GetValue(field);
-                    Log.Info(TAG, "Detected DataPoint field: " + field.Name);
-                    Log.Info(TAG, "Detected DataPoint value: " + val);
-                }
-            }
-        }
-
-    }
-    
-    public partial class MainActivity : IOnDataPointListener
-    {
-        public void OnDataPoint(DataPoint dataPoint)
-        {
-            foreach (var field in dataPoint.DataType.Fields)
-            {
-                Value val = dataPoint.GetValue(field);
-                Log.Info(TAG, "Detected DataPoint field: " + field.Name);
-                Log.Info(TAG, "Detected DataPoint value: " + val);
-            }
-        }
     }
 
     /*
@@ -276,9 +181,9 @@ namespace APIFitnessApp.Droid
             int last24Hours = ExtractStepValue(buckets[buckets.Count - 1]);
             // second-last bucket's the 24 hours previous to the above
             int last48Hours = ExtractStepValue(buckets[buckets.Count - 2]) + last24Hours;
-            Log.Info(TAG, "Pasos del historial: " + last24Hours.ToString());
-            //(FindViewById<TextView>(Resource.Id.past24Value)).Text = last24Hours.ToString();
-            //(FindViewById<TextView>(Resource.Id.past48Value)).Text = last48Hours.ToString();
+
+            (FindViewById<TextView>(Resource.Id.past24Value)).Text = last24Hours.ToString();
+            (FindViewById<TextView>(Resource.Id.past48Value)).Text = last48Hours.ToString();
         }
 
         private int ExtractStepValue(Bucket bucket)

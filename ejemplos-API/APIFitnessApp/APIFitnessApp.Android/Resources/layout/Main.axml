@@ -5,11 +5,9 @@
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
     android:minWidth="25px"
-    android:minHeight="25px"
-    android:backgroundTint="#ffa52a2a"
-    android:background="@android:color/black">
+    android:minHeight="25px">
     <TextView
-        android:text="Ubicacion"
+        android:text="Past 24 Hours"
         android:textAppearance="?android:attr/textAppearanceLarge"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -22,11 +20,11 @@
         android:textSize="32dp"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:id="@+id/location"
+        android:id="@+id/past24Value"
         android:gravity="center"
         android:layout_marginTop="10dp" />
     <TextView
-        android:text="Pasos"
+        android:text="Past 48 Hours"
         android:textAppearance="?android:attr/textAppearanceLarge"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -38,7 +36,7 @@
         android:textSize="32dp"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:id="@+id/step"
+        android:id="@+id/past48Value"
         android:gravity="center"
         android:layout_marginTop="10dp" />
 </LinearLayout>
