@@ -13,7 +13,8 @@ namespace APIFitnessApp
         {
             InitializeComponent();
 
-            MainPage = new APIFitnessApp.MainPage();
+            // The root page of your application
+            MainPage = new TodoList();
         }
 
         protected override void OnStart()

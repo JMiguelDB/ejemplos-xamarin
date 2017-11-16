@@ -1,9 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-
-using Foundation;
+﻿using Foundation;
 using UIKit;
+using Microsoft.WindowsAzure.MobileServices;
 
 namespace APIFitnessApp.iOS
 {
@@ -22,6 +19,10 @@ namespace APIFitnessApp.iOS
         //
         public override bool FinishedLaunching(UIApplication app, NSDictionary options)
         {
+            // Initialize Azure Mobile Apps
+            CurrentPlatform.Init();
+
+            // Initialize Xamarin Forms
             global::Xamarin.Forms.Forms.Init();
             LoadApplication(new App());
 
